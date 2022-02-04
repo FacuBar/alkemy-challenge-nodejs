@@ -1,0 +1,20 @@
+version: '3'
+services:
+  mysql-srv:
+    image: 'mysql:8'
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_DATABASE=disney
+      - MYSQL_ROOT_HOST=%
+      - MYSQL_TCP_PORT=4000
+    ports: 
+      - '4000:4000'
+      
+  api-srv:
+    restart: always
+    env_file:
+      - ./docker.env
+    build: ./
+    ports:
+      - '8000:8000'
+    command: sh -c './wait-for mysql-srv:4000 -- npm start'

@@ -1,0 +1,563 @@
+openapi: 3.0.0
+info:
+  title: AlkemyTestAPI
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+
+security:
+  - BearerAuth: []
+
+paths:
+  /users/register:
+    post:
+      summary: Creates an user and returns an access token
+      tags:
+        - users
+      requestBody:
+        description: information of the account to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: email@email.com
+                password:
+                  type: string
+                  example: password
+                password_confirmation:
+                  type: string
+                  example: password
+      responses:
+        '200':
+          $ref: '#/components/responses/JWT'
+        '400':
+          $ref: '#/components/responses/ValidationErrors'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /users/login:
+    post:
+      summary: Validates credentials and returns access token
+      tags:
+        - users
+      requestBody:
+        description: credentials to login into account
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          $ref: '#/components/responses/JWT'
+        '400':
+          $ref: '#/components/responses/ValidationErrors'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /movies:
+    post:
+      summary: Creates a movie and returns it
+      tags:
+        - movies
+      requestBody:
+        description: information related to a movie
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: Inside Llewyn Davis
+                image:
+                  type: string
+                  example: https://urlstoimages.com/image.jpg
+                calification:
+                  type: integer
+                  maximum: 5
+                release_date:
+                  type: string
+                  example: '2005-05-29'
+      responses:
+        '200':
+          description: movie with its unique id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '400':
+          $ref: '#/components/responses/ValidationErrors'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      summary: Returns a list of movies
+      tags:
+        - movies
+      parameters:
+        - in: query
+          name: title
+          schema:
+            type: string
+          description: Title of the movie
+        - in: query
+          name: genre
+          schema:
+            oneOf:
+              - type: integer
+                example: 1
+              - type: array
+                items:
+                  type: integer
+          description: numeric id for genre, multiple allowed
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum:
+              - ASC
+              - DESC
+            default: DESC
+          description: order by releaseDate
+      responses:
+        '200':
+          description: list of movies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    image:
+                      type: string
+                      example: https://urlstoimages.com/image.jpg
+                    title:
+                      type: string
+                      example: Inside Llewyn Davis
+                    releaseDate:
+                      type: string
+                      example: 2022-01-05T00:00:00.000Z
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /movies/{movie_id}:
+    parameters:
+      - in: path
+        name: movie_id
+        schema:
+          type: integer
+        required: true
+        description: numeric id of the movie/tv-serie
+    get:
+      summary: Returns a movie and a list of its characters
+      tags:
+        - movies
+      responses:
+        '200':
+          description: movie and its characters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Updates a movie and returns it
+      tags:
+        - movies
+      requestBody:
+        description: information related to movie, fields can be omited
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                image:
+                  type: string
+                calification:
+                  type: integer
+                release_date:
+                  type: string
+                characters:
+                  type: array
+                  items:
+                    type: integer
+                genres:
+                  type: array
+                  items:
+                    type: integer
+              example:
+                title: 'some other title'
+      responses:
+        '200':
+          description: movie updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '400':
+          $ref: '#/components/responses/ValidationErrors'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Removes a movie of the database
+      tags:
+        - movies
+      responses:
+        '204':
+          description: operation completed
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /characters:
+    post:
+      summary: Creates a character and returns it
+      tags:
+        - characters
+      requestBody:
+        description: information about character
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  example: https://urlstoimages.com/image.jpg
+                name:
+                  type: string
+                  example: Llewyn Davis
+                age:
+                  type: integer
+                  example: 30
+                weight:
+                  type: integer
+                  example: 80
+                history:
+                  type: string
+                  example: some large and descriptive text
+                movies:
+                  type: array
+                  items:
+                    type: integer
+                  example: [1]
+      responses:
+        '200':
+          description: character added succesfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Character'
+        '400':
+          $ref: '#/components/responses/ValidationErrors'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      summary: Returns a list of characters
+      tags:
+        - characters
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: search by name of character
+        - in: query
+          name: movie
+          schema:
+            oneOf:
+              - type: integer
+                example: 1
+              - type: array
+                items:
+                  type: integer
+          description: numeric id for movie, multiple allowed
+        - in: query
+          name: age
+          schema:
+            type: integer
+          description: search by age of character
+      responses:
+        '200':
+          description: list of characters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    image:
+                      type: string
+                      example: https://urlstoimages.com/image.jpg
+                    name:
+                      type: string
+                      example: Llewyn Davis
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /characters/{character_id}:
+    parameters:
+      - in: path
+        name: character_id
+        schema:
+          type: integer
+        required: true
+        description: numeric id of the character
+    get:
+      summary: Returns a movie and a list of its characters
+      tags:
+        - characters
+      responses:
+        '200':
+          description: movie and its characters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Character'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Updates a character and returns it
+      tags:
+        - characters
+      requestBody:
+        description: information about character, fields can be omited
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                name:
+                  type: string
+                age:
+                  type: integer
+                weight:
+                  type: integer
+                history:
+                  type: string
+                movies:
+                  type: array
+                  items:
+                    type: integer
+              example:
+                image: some random image
+      responses:
+        '200':
+          description: 'character updated succesfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Character'
+        '400':
+          $ref: '#/components/responses/ValidationErrors'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Removes a movie of the database
+      tags:
+        - characters
+      responses:
+        '204':
+          $ref: '#/components/responses/DeleteResponse'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        email:
+          type: string
+          example: email@email.com
+        password:
+          type: string
+          example: password
+    Movie:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        image:
+          type: string
+          example: https://urlstoimages.com/image.jpg
+        title:
+          type: string
+          example: Inside Llewyn Davis
+        calification:
+          type: integer
+          minimum: 1
+          maximum: 5
+        releaseDate:
+          type: string
+          example: 2022-01-05T00:00:00.000Z
+        createdAt:
+          type: string
+          example: 2022-01-05T00:00:00.000Z
+        updatedAt:
+          type: string
+          example: 2022-01-05T00:00:00.000Z
+        characters:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              image:
+                type: string
+                example: https://urlstoimages.com/image.jpg
+              name:
+                type: string
+                example: Llewyn Davis
+    Character:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        image:
+          type: string
+          example: https://urlstoimages.com/image.jpg
+        name:
+          type: string
+          example: Llewyn Davis
+        age:
+          type: integer
+          example: 30
+        weight:
+          type: integer
+          example: 80
+        createdAt:
+          type: string
+          example: 2022-01-05T00:00:00.000Z
+        updatedAt:
+          type: string
+          example: 2022-01-05T00:00:00.000Z
+        movies:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              image:
+                type: string
+                example: https://urlstoimages.com/image.jpg
+              title:
+                type: string
+                example: Inside Llewyn Davis
+  responses:
+    JWT:
+      description: token
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+    ValidationErrors:
+      description: A JSON array of errors
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    msg:
+                      type: string
+                    param:
+                      type: string
+                    location:
+                      type: string
+    NotFoundError:
+      description: not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: 'resource not found'
+    DeleteResponse:
+      description: delete response
+      content:
+        application/json:
+          schema:
+            type: object
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Unauthorized
+    InternalServerError:
+      description: internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: something went wrong.
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: jwt
+      description: 'note: non-oauth scopes are not defined at the securityScheme level'
+
+tags:
+  - name: users
+  - name: movies
+  - name: characters
