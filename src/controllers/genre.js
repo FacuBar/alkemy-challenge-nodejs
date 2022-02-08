@@ -1,15 +1,14 @@
-import { newCharacter } from '../domain/index.js';
+import { newGenre } from '../domain/index.js';
 
-export default function buildNewCharacterController(repo) {
+export default function buildNewGenreController(repo) {
   return Object.freeze({
     create,
     getAll,
-    getOne,
   });
 
   async function create(req, res) {
     try {
-      const character = newCharacter(req.body);
+      const character = newGenre(req.body);
       const result = await repo.create(character);
       res.json({ data: result });
     } catch (e) {
@@ -22,15 +21,6 @@ export default function buildNewCharacterController(repo) {
       console.log(req.query);
       const result = await repo.getAll(req.query);
       res.json(result);
-    } catch (e) {
-      res.status(400).json({ error: e.message });
-    }
-  }
-
-  async function getOne(req, res) {
-    try {
-      const character = await repo.getOne(req.params.id);
-      res.json({ data: character });
     } catch (e) {
       res.status(400).json({ error: e.message });
     }

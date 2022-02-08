@@ -10,6 +10,75 @@ security:
   - BearerAuth: []
 
 paths:
+  /genres:
+    post:
+      summary: Creates a genre and returns it
+      tags:
+        - genres
+      requestBody:
+        description: information related to a genre
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: drama
+                image:
+                  type: string
+                  example: https://urlstoimages.com/image.jpg
+      responses:
+        '200':
+          description: genre with its unique id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Genre'
+    get:
+      summary: Returns a list of genres
+      tags:
+        - genres
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            example: 1
+          description: nr of page
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            example: 10
+          description: genres per page
+      responses:
+        '200':
+          description: list of shows
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: Drama
+                        image:
+                          type: string
+                          example: https://urlstoimages.com/image.jpg
+                  metadata:
+                    $ref: '#/components/schemas/metadata'
   /users/register:
     post:
       summary: Creates an user and returns an access token
@@ -61,13 +130,13 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /movies:
+  /shows:
     post:
-      summary: Creates a movie and returns it
+      summary: Creates a show and returns it
       tags:
-        - movies
+        - shows
       requestBody:
-        description: information related to a movie
+        description: information related to a show
         content:
           application/json:
             schema:
@@ -82,16 +151,59 @@ paths:
                 calification:
                   type: integer
                   maximum: 5
-                release_date:
+                releaseDate:
                   type: string
                   example: '2005-05-29'
+                genres:
+                  type: array
+                  items:
+                    type: integer
+                  example: [1, 2]
       responses:
         '200':
-          description: movie with its unique id
+          description: show with its unique id
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Movie'
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      image:
+                        type: string
+                        example: https://urlstoimages.com/image.jpg
+                      title:
+                        type: string
+                        example: Inside Llewyn Davis
+                      calification:
+                        type: integer
+                        minimum: 1
+                        maximum: 5
+                      releaseDate:
+                        type: string
+                        example: 2022-01-05T00:00:00.000Z
+                      createdAt:
+                        type: string
+                        example: 2022-01-05T00:00:00.000Z
+                      updatedAt:
+                        type: string
+                        example: 2022-01-05T00:00:00.000Z
+                      genres:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: drama
+
         '400':
           $ref: '#/components/responses/ValidationErrors'
         '401':
@@ -100,15 +212,15 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
     get:
-      summary: Returns a list of movies
+      summary: Returns a list of shows
       tags:
-        - movies
+        - shows
       parameters:
         - in: query
           name: title
           schema:
             type: string
-          description: Title of the movie
+          description: Title of the show
         - in: query
           name: genre
           schema:
@@ -130,107 +242,164 @@ paths:
           description: order by releaseDate
       responses:
         '200':
-          description: list of movies
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    image:
-                      type: string
-                      example: https://urlstoimages.com/image.jpg
-                    title:
-                      type: string
-                      example: Inside Llewyn Davis
-                    releaseDate:
-                      type: string
-                      example: 2022-01-05T00:00:00.000Z
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-  /movies/{movie_id}:
-    parameters:
-      - in: path
-        name: movie_id
-        schema:
-          type: integer
-        required: true
-        description: numeric id of the movie/tv-serie
-    get:
-      summary: Returns a movie and a list of its characters
-      tags:
-        - movies
-      responses:
-        '200':
-          description: movie and its characters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Movie'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    put:
-      summary: Updates a movie and returns it
-      tags:
-        - movies
-      requestBody:
-        description: information related to movie, fields can be omited
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                image:
-                  type: string
-                calification:
-                  type: integer
-                release_date:
-                  type: string
-                characters:
-                  type: array
-                  items:
-                    type: integer
-                genres:
-                  type: array
-                  items:
-                    type: integer
-              example:
-                title: 'some other title'
-      responses:
-        '200':
-          description: movie updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Movie'
-        '400':
-          $ref: '#/components/responses/ValidationErrors'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    delete:
-      summary: Removes a movie of the database
-      tags:
-        - movies
-      responses:
-        '204':
-          description: operation completed
+          description: list of shows
           content:
             application/json:
               schema:
                 type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        image:
+                          type: string
+                          example: https://urlstoimages.com/image.jpg
+                        title:
+                          type: string
+                          example: Inside Llewyn Davis
+                        releaseDate:
+                          type: string
+                          example: 2022-01-05T00:00:00.000Z
+                  metadata:
+                    type: object
+                    properties:
+                      lastPage:
+                        type: integer
+                        example: 2
+                      currentPage:
+                        type: integer
+                        example: 1
+                      previousPage:
+                        type: integer
+                        example: null
+                      nextPage:
+                        type: integer
+                        example: 2
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /shows/{show_id}:
+    parameters:
+      - in: path
+        name: show_id
+        schema:
+          type: integer
+        required: true
+        description: numeric id of the show/tv-serie
+    get:
+      summary: Returns a show and a list of its characters
+      tags:
+        - shows
+      responses:
+        '200':
+          description: show and its characters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      title:
+                        type: string
+                        example: Inside Llewyn Davis
+                      releaseDate:
+                        type: string
+                        example: 2022-02-05T21:11:57.000Z
+                      calification:
+                        type: integer
+                        example: 5
+                      image:
+                        type: string
+                        example: https://urlstoimages.com/image.jpg
+                      createdAt:
+                        type: string
+                        example: 2022-02-05T21:11:57.000Z
+                      updatedAt:
+                        type: string
+                        example: 2022-02-05T21:11:57.000Z
+                      characters:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            image:
+                              type: string
+                              example: https://urlstoimages.com/image.jpg
+                            name:
+                              type: string
+                              example: Llewyn Davis
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    # put:
+    #   summary: Updates a show and returns it
+    #   tags:
+    #     - shows
+    #   requestBody:
+    #     description: information related to show, fields can be omited
+    #     content:
+    #       application/json:
+    #         schema:
+    #           type: object
+    #           properties:
+    #             title:
+    #               type: string
+    #             image:
+    #               type: string
+    #             calification:
+    #               type: integer
+    #             release_date:
+    #               type: string
+    #             characters:
+    #               type: array
+    #               items:
+    #                 type: integer
+    #             genres:
+    #               type: array
+    #               items:
+    #                 type: integer
+    #           example:
+    #             title: 'some other title'
+    #   responses:
+    #     '200':
+    #       description: show updated
+    #       content:
+    #         application/json:
+    #           schema:
+    #             $ref: '#/components/schemas/Show'
+    #     '400':
+    #       $ref: '#/components/responses/ValidationErrors'
+    #     '401':
+    #       $ref: '#/components/responses/Unauthorized'
+    #     '404':
+    #       $ref: '#/components/responses/NotFoundError'
+    #     '500':
+    #       $ref: '#/components/responses/InternalServerError'
+    # delete:
+    #   summary: Removes a show of the database
+    #   tags:
+    #     - shows
+    #   responses:
+    #     '204':
+    #       description: operation completed
+    #       content:
+    #         application/json:
+    #           schema:
+    #             type: object
 
   /characters:
     post:
@@ -259,7 +428,7 @@ paths:
                 history:
                   type: string
                   example: some large and descriptive text
-                movies:
+                shows:
                   type: array
                   items:
                     type: integer
@@ -288,7 +457,7 @@ paths:
             type: string
           description: search by name of character
         - in: query
-          name: movie
+          name: show
           schema:
             oneOf:
               - type: integer
@@ -296,7 +465,7 @@ paths:
               - type: array
                 items:
                   type: integer
-          description: numeric id for movie, multiple allowed
+          description: numeric id for show, multiple allowed
         - in: query
           name: age
           schema:
@@ -332,12 +501,12 @@ paths:
         required: true
         description: numeric id of the character
     get:
-      summary: Returns a movie and a list of its characters
+      summary: Returns a show and a list of its characters
       tags:
         - characters
       responses:
         '200':
-          description: movie and its characters
+          description: show and its characters
           content:
             application/json:
               schema:
@@ -348,55 +517,55 @@ paths:
           $ref: '#/components/responses/NotFoundError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-    put:
-      summary: Updates a character and returns it
-      tags:
-        - characters
-      requestBody:
-        description: information about character, fields can be omited
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                image:
-                  type: string
-                name:
-                  type: string
-                age:
-                  type: integer
-                weight:
-                  type: integer
-                history:
-                  type: string
-                movies:
-                  type: array
-                  items:
-                    type: integer
-              example:
-                image: some random image
-      responses:
-        '200':
-          description: 'character updated succesfully'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Character'
-        '400':
-          $ref: '#/components/responses/ValidationErrors'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    delete:
-      summary: Removes a movie of the database
-      tags:
-        - characters
-      responses:
-        '204':
-          $ref: '#/components/responses/DeleteResponse'
+    # put:
+    #   summary: Updates a character and returns it
+    #   tags:
+    #     - characters
+    #   requestBody:
+    #     description: information about character, fields can be omited
+    #     content:
+    #       application/json:
+    #         schema:
+    #           type: object
+    #           properties:
+    #             image:
+    #               type: string
+    #             name:
+    #               type: string
+    #             age:
+    #               type: integer
+    #             weight:
+    #               type: integer
+    #             history:
+    #               type: string
+    #             shows:
+    #               type: array
+    #               items:
+    #                 type: integer
+    #           example:
+    #             image: some random image
+    #   responses:
+    #     '200':
+    #       description: 'character updated succesfully'
+    #       content:
+    #         application/json:
+    #           schema:
+    #             $ref: '#/components/schemas/Character'
+    #     '400':
+    #       $ref: '#/components/responses/ValidationErrors'
+    #     '401':
+    #       $ref: '#/components/responses/Unauthorized'
+    #     '404':
+    #       $ref: '#/components/responses/NotFoundError'
+    #     '500':
+    #       $ref: '#/components/responses/InternalServerError'
+    # delete:
+    #   summary: Removes a show of the database
+    #   tags:
+    #     - characters
+    #   responses:
+    #     '204':
+    #       $ref: '#/components/responses/DeleteResponse'
 
 components:
   schemas:
@@ -409,45 +578,44 @@ components:
         password:
           type: string
           example: password
-    Movie:
+    Show:
       type: object
       properties:
-        id:
-          type: integer
-          example: 1
-        image:
-          type: string
-          example: https://urlstoimages.com/image.jpg
-        title:
-          type: string
-          example: Inside Llewyn Davis
-        calification:
-          type: integer
-          minimum: 1
-          maximum: 5
-        releaseDate:
-          type: string
-          example: 2022-01-05T00:00:00.000Z
-        createdAt:
-          type: string
-          example: 2022-01-05T00:00:00.000Z
-        updatedAt:
-          type: string
-          example: 2022-01-05T00:00:00.000Z
-        characters:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            image:
+              type: string
+              example: https://urlstoimages.com/image.jpg
+            title:
+              type: string
+              example: Inside Llewyn Davis
+            calification:
+              type: integer
+              minimum: 1
+              maximum: 5
+            releaseDate:
+              type: string
+              example: 2022-01-05T00:00:00.000Z
+            createdAt:
+              type: string
+              example: 2022-01-05T00:00:00.000Z
+            updatedAt:
+              type: string
+              example: 2022-01-05T00:00:00.000Z
+            genres:
+              type: array
+              items:
                 type: integer
-                example: 1
-              image:
-                type: string
-                example: https://urlstoimages.com/image.jpg
-              name:
-                type: string
-                example: Llewyn Davis
+              example: [1, 2]
+            characters:
+              type: array
+              items:
+                type: integer
+              example: [2, 5]
     Character:
       type: object
       properties:
@@ -472,7 +640,7 @@ components:
         updatedAt:
           type: string
           example: 2022-01-05T00:00:00.000Z
-        movies:
+        shows:
           type: array
           items:
             type: object
@@ -486,6 +654,40 @@ components:
               title:
                 type: string
                 example: Inside Llewyn Davis
+    Genre:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Drama
+        image:
+          type: string
+          example: https://urlstoimages.com/image.jpg
+        createdAt:
+          type: string
+          example: 2022-01-05T00:00:00.000Z
+        updatedAt:
+          type: string
+          example: 2022-01-05T00:00:00.000Z
+    metadata:
+      type: object
+      properties:
+        lastPage:
+          type: integer
+          example: 2
+        currentPage:
+          type: integer
+          example: 1
+        previousPage:
+          type: integer
+          example: null
+        nextPage:
+          type: integer
+          example: 2
+
   responses:
     JWT:
       description: token
@@ -559,5 +761,6 @@ components:
 
 tags:
   - name: users
-  - name: movies
+  - name: genres
+  - name: shows
   - name: characters
